@@ -4,6 +4,7 @@ disable:too-few-public-methods,
         missing-module-docstring,
         missing-class-docstring,
         too-many-arguments,
+        consider-using-with,
 
 [FORMAT]
 max-line-length=100
