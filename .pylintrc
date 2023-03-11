@@ -1,0 +1,9 @@
+[MESSAGES CONTROL]
+disable:too-few-public-methods,
+        missing-function-docstring,
+        missing-module-docstring,
+        missing-class-docstring,
+        too-many-arguments,
+
+[FORMAT]
+max-line-length=100
