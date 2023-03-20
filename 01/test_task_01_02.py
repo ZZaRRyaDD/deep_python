@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from .task_02_read_filter_file import generator
+from task_02_read_filter_file import generator
 
 
 @pytest.mark.parametrize(

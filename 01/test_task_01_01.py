@@ -1,7 +1,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from .task_01_message_mood import predict_message_mood, SomeModel
+from task_01_message_mood import predict_message_mood, SomeModel
 
 
 @pytest.mark.parametrize(
@@ -45,6 +45,6 @@ def test_predict_message_mood(
     value: float,
     result: str,
 ) -> None:
-    mocker.patch("homework_01.task_01_message_mood.SomeModel.predict", return_value=value)
+    mocker.patch("task_01_message_mood.SomeModel.predict", return_value=value)
     model = SomeModel()
     assert predict_message_mood(message, model, bad_thresholds, good_thresholds) == result

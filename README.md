@@ -23,6 +23,6 @@ coverage html
 Проверка линтерами:
 
 ```bash
-flake8 ./homework_*
-pylint ./homework_*
+flake8
+pylint
 ```
