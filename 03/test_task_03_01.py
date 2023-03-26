@@ -53,8 +53,7 @@ def test_custom_list_add(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_add = first_operand + second_operand
-    assert result_add == result
+    assert (first_operand + second_operand) == result
 
 
 @pytest.mark.parametrize(
@@ -107,8 +106,7 @@ def test_custom_list_sub(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_sub = first_operand - second_operand
-    assert result_sub == result
+    assert (first_operand - second_operand) == result
 
 
 @pytest.mark.parametrize(
@@ -146,8 +144,7 @@ def test_custom_list_eq(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_eq = first_operand == second_operand
-    assert result_eq == result
+    assert (first_operand == second_operand) == result
 
 
 @pytest.mark.parametrize(
@@ -190,8 +187,7 @@ def test_custom_list_ge(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_ge = first_operand >= second_operand
-    assert result_ge == result
+    assert (first_operand >= second_operand) == result
 
 
 @pytest.mark.parametrize(
@@ -234,8 +230,7 @@ def test_custom_list_gt(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_gt = first_operand > second_operand
-    assert result_gt == result
+    assert (first_operand > second_operand) == result
 
 
 @pytest.mark.parametrize(
@@ -278,8 +273,7 @@ def test_custom_list_le(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_gt = first_operand <= second_operand
-    assert result_gt == result
+    assert (first_operand <= second_operand) == result
 
 
 @pytest.mark.parametrize(
@@ -322,5 +316,4 @@ def test_custom_list_lt(
     second_operand: CustomList | list,
     result: CustomList | list,
 ):
-    result_gt = first_operand < second_operand
-    assert result_gt == result
+    assert (first_operand < second_operand) == result
