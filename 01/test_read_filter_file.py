@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from task_02_read_filter_file import generator
+from read_filter_file import filter_file_generator
 
 
 @pytest.mark.parametrize(
@@ -55,12 +55,12 @@ def test_generator_func_file_name(
     words: list,
     strings: list,
     result: list,
-    file_name: str = "some_file"
+    file_name: str = "some_file",
 ):
     directory = tmpdir.mkdir("directory")
     path_file = directory.join(file_name)
     path_file.write("\n".join(strings))
-    assert list(generator(words, path_file.strpath)) == result
+    assert list(filter_file_generator(words, path_file.strpath)) == result
 
 
 @pytest.mark.parametrize(
@@ -113,10 +113,11 @@ def test_generator_func_file_object(
     words: list,
     strings: list,
     result: list,
-    file_name: str = "some_file"
+    file_name: str = "some_file",
 ):
     directory = tmpdir.mkdir("directory")
     path_file = directory.join(file_name)
     path_file.write("\n".join(strings))
     file_ptr = open(path_file, mode="r", encoding="utf-8")
-    assert list(generator(words, file_object=file_ptr)) == result
+    assert list(filter_file_generator(words, file_object=file_ptr)) == result
+    file_ptr.close()

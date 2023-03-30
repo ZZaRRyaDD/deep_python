@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 from pytest_mock import MockerFixture
 
-from task_01_parse_json import parse_json
+from parse_json import parse_json
 
 
 @pytest.mark.parametrize(

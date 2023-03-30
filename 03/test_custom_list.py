@@ -1,6 +1,6 @@
 import pytest
 
-from task_01_custom_list import CustomList
+from custom_list import CustomList
 
 
 @pytest.mark.parametrize(
