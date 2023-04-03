@@ -35,6 +35,13 @@ from message_mood import predict_message_mood, SomeModel
             0.6,
             "норм",
         ],
+        [
+            "Какое-то предложение",
+            0.4,
+            0.6,
+            0.4,
+            "норм",
+        ],
     ],
 )
 def test_predict_message_mood(
@@ -45,5 +52,7 @@ def test_predict_message_mood(
     value: float,
     result: str,
 ) -> None:
-    mocker.patch("message_mood.SomeModel.predict", return_value=value)
-    assert predict_message_mood(message, SomeModel(), bad_thresholds, good_thresholds) == result
+    model = SomeModel()
+    model.predict = mocker.MagicMock(side_effect=(value,))
+    assert predict_message_mood(message, model, bad_thresholds, good_thresholds) == result
+    assert model.predict.call_args == ((message,),)
