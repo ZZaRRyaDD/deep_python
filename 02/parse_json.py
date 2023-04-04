@@ -2,8 +2,8 @@ import json
 from typing import Callable, Optional
 
 
-def word_handler(word: str) -> int:
-    return len(word)  # pragma: no cover
+def word_handler(key: str, word: str) -> int:
+    return len(word) + len(key)  # pragma: no cover
 
 
 def parse_json(
@@ -11,10 +11,10 @@ def parse_json(
         keyword_callback: Callable = word_handler,
         required_fields: Optional[str] = None,
         keywords: Optional[str] = None
-) -> Optional[tuple[int, int]]:
-    if any([required_fields is None, keywords is None]):
+) -> Optional[tuple[int, list]]:
+    if any([required_fields is None, keywords is None, keyword_callback is None]):
         return None
-    count_call_callback, sum_responses = 0, 0
+    count_call_callback, responses = 0, []
     json_doc = json.loads(json_str)
     for key, value in json_doc.items():
         if all([
@@ -22,6 +22,6 @@ def parse_json(
             intersection := set(value.split(" ")).intersection(set(keywords)),
         ]):
             for word in intersection:
-                sum_responses += keyword_callback(word)
+                responses.append(keyword_callback(key, word))
                 count_call_callback += 1
-    return count_call_callback, sum_responses
+    return count_call_callback, responses
