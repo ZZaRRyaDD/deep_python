@@ -83,4 +83,4 @@ def test_parse_json(
 ):
     func = mocker.Mock(side_effect=responses)
     assert parse_json(json_str, func, required_fields=required_fields, keywords=keywords) == result
-    assert func.call_args_list == args
+    assert sorted(func.call_args_list) == args

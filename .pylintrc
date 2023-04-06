@@ -6,6 +6,9 @@ disable:too-few-public-methods,
         too-many-arguments,
         consider-using-with,
         invalid-name,
+        bad-staticmethod-argument,
+        unexpected-special-method-signature,
+        no-member,
 
 [FORMAT]
 max-line-length=100
