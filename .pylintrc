@@ -9,6 +9,7 @@ disable:too-few-public-methods,
         bad-staticmethod-argument,
         unexpected-special-method-signature,
         no-member,
+        use-implicit-booleaness-not-len
 
 [FORMAT]
 max-line-length=100
