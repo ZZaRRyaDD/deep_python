@@ -45,6 +45,35 @@ def test_descriptors_success(
 
 
 @pytest.mark.parametrize(
+    ["num", "name", "price"],
+    [
+        [
+            2,
+            "some string",
+            3,
+        ],
+    ],
+)
+def test_descriptors_change_values(num, name, price):
+    instance = Data(num, name, price)
+    with pytest.raises(ValueError, match="Значение 2 не является числовым"):
+        instance.num = "2"
+    assert instance.num == num
+
+    with pytest.raises(ValueError, match="Значение 2 не является строковым"):
+        instance.name = 2
+    assert instance.name == name
+
+    with pytest.raises(ValueError, match="Значение 2 не является числовым"):
+        instance.price = "2"
+    assert instance.price == price
+
+    with pytest.raises(ValueError, match="Значение -2 не больше нуля"):
+        instance.price = -2
+    assert instance.price == price
+
+
+@pytest.mark.parametrize(
     ["num", "name", "price", "message"],
     [
         [

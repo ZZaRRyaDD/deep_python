@@ -14,7 +14,7 @@ class CustomMeta(type):
 
     @staticmethod
     def __setattr__(self, name, value):
-        if not name.startswith("custom_"):
+        if not (name.startswith("custom_") or (name.startswith("__") and name.endswith("__"))):
             object.__setattr__(self, f"custom_{name}", value)
 
 
