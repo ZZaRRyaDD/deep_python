@@ -73,14 +73,16 @@ def test_custom_list_add(
 ):
     test_result = first_operand + second_operand
     assert test_result == result
-    is_equal = True
-    for index, item in enumerate(test_result):
-        if item != result[index]:
-            is_equal = False
-            break
-    assert is_equal
+    assert len(test_result) == len(result)
+    assert all(item == result[index] for index, item in enumerate(test_result))
+
     assert copy_first_operand == first_operand
+    assert len(copy_first_operand) == len(first_operand)
+    assert all(item == first_operand[index] for index, item in enumerate(copy_first_operand))
+
     assert copy_second_operand == second_operand
+    assert len(copy_second_operand) == len(second_operand)
+    assert all(item == second_operand[index] for index, item in enumerate(copy_second_operand))
 
 
 @pytest.mark.parametrize(
@@ -191,14 +193,16 @@ def test_custom_list_sub(
 ):
     test_result = first_operand - second_operand
     assert test_result == result
-    is_equal = True
-    for index, item in enumerate(test_result):
-        if item != result[index]:
-            is_equal = False
-            break
-    assert is_equal
+    assert len(test_result) == len(result)
+    assert all(item == result[index] for index, item in enumerate(test_result))
+
     assert copy_first_operand == first_operand
+    assert len(copy_first_operand) == len(first_operand)
+    assert all(item == first_operand[index] for index, item in enumerate(copy_first_operand))
+
     assert copy_second_operand == second_operand
+    assert len(copy_second_operand) == len(second_operand)
+    assert all(item == second_operand[index] for index, item in enumerate(copy_second_operand))
 
 
 @pytest.mark.parametrize(
