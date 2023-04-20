@@ -9,7 +9,8 @@ disable:too-few-public-methods,
         bad-staticmethod-argument,
         unexpected-special-method-signature,
         no-member,
-        use-implicit-booleaness-not-len
+        use-implicit-booleaness-not-len,
+        global-statement
 
 [FORMAT]
 max-line-length=100

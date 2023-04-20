@@ -1,8 +1,24 @@
 import argparse
+import json
 import socket
+import threading
 
 HOST = "127.0.0.1"
-PORT = 65432
+PORT = 8080
+DEFAULT_ENCODING = "utf-8"
+
+
+def client_sender(file, lock):
+    while True:
+        with lock:
+            url = file.readline().replace("\n", "")
+            if not url:
+                break
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+            client.connect((HOST, PORT))
+            client.sendall(url.encode(DEFAULT_ENCODING))
+            data = client.recv(8192)
+            print(f"{url}: {json.loads(data.decode(DEFAULT_ENCODING))}\n")
 
 
 def main():
@@ -20,13 +36,21 @@ def main():
         help="Путь к файлу",
     )
     args = parser.parse_args()
-    urls = []
-    with open(args.path, "r", encoding="utf-8") as file:
-        urls = file.readlines()
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(b"Hello, world")
-        data = s.recv(8192)
+    lock = threading.Lock()
+    file = open(args.path, "r", encoding="utf-8")
+    threads = [
+        threading.Thread(
+            target=client_sender,
+            name=f"thread_{i}",
+            args=(file, lock),
+        )
+        for i in range(args.threads)
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    file.close()
 
 
 if __name__ == "__main__":
