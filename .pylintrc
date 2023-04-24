@@ -10,7 +10,8 @@ disable:too-few-public-methods,
         unexpected-special-method-signature,
         no-member,
         use-implicit-booleaness-not-len,
-        global-statement
+        global-statement,
+        duplicate-code
 
 [FORMAT]
 max-line-length=100
