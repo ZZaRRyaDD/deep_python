@@ -18,7 +18,7 @@ def fake_client(tmp_queue: queue.Queue, host: str, port: int) -> None:
         "https://dzen.ru/",
         "https://ya.ru/",
         "https://krasnoyarsk.hh.ru/",
-        "https://ru.wikipedia.org/wiki/Python",
+        "https://docs.python.org/3/whatsnew/3.11.html",
     ]
     timeout = 10
     for url in base_urls:

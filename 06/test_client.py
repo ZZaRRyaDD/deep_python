@@ -47,7 +47,7 @@ def test_client_side(tmpdir) -> None:
         "https://dzen.ru/",
         "https://ya.ru/",
         "https://krasnoyarsk.hh.ru/",
-        "https://ru.wikipedia.org/wiki/Python",
+        "https://docs.python.org/3/whatsnew/3.11.html",
     ]
     path = os.path.abspath("/start")
     filename = "file.txt"
