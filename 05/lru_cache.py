@@ -12,8 +12,10 @@ class LRUCache:
         return value
 
     def set(self, key, value):
-        item = self.elements.pop(key, None)
-        if item is None and len(self.elements) == self.limit:
-            for_delete = next(iter(self.elements))
-            self.elements.pop(for_delete)
+        if key in self.elements:
+            self.elements.pop(key, None)
+        else:
+            if len(self.elements) == self.limit:
+                for_delete = next(iter(self.elements))
+                self.elements.pop(for_delete)
         self.elements[key] = value
