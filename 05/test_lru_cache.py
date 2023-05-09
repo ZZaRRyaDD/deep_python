@@ -42,11 +42,11 @@ def test_lru_cache_change_exists_key():
     cache.set("k2", "val2")
     cache.set("k3", "val3")
 
-    cache.set("k2", "val2_new")
+    cache.set("k1", "val1_new")
 
     cache.set(4, "new")
 
-    assert cache.get("k1") is None
-    assert cache.get("k2") == "val2_new"
+    assert cache.get("k1") == "val1_new"
+    assert cache.get("k2") is None
     assert cache.get("k3") == "val3"
     assert cache.get(4) == "new"
