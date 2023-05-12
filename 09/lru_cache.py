@@ -2,7 +2,7 @@ import argparse
 import logging
 import logging.config
 
-from custom_logger import conf
+from custom_logger import conf, CustomFilter
 
 
 class LRUCache:
@@ -13,12 +13,12 @@ class LRUCache:
         )
         parser.add_argument(
             "-s",
-            type=bool,
+            action='store_true',
             help="Дополнительное логирование в stdout",
         )
         parser.add_argument(
             "-f",
-            type=bool,
+            action='store_true',
             help="Флаг применение кастомного фильтра",
         )
         self.args = parser.parse_args()
@@ -27,43 +27,68 @@ class LRUCache:
         self.stdout_logger = None
         if self.args.s:
             self.stdout_logger = logging.getLogger("stdout")
-            if self.args.f:
-                self.stdout_logger.addFilter()  # добавить фильтр
+        if self.args.f:
+            if self.stdout_logger is not None:
+                self.stdout_logger.addFilter(CustomFilter())
+            self.main_logger.addFilter(CustomFilter())
         self.limit = limit
         self.elements = {}
-        self.main_logger.warning(f"Объект кеша инициализирован с емкостью {self.limit}")
-        self.stdout_logger.warning(f"Объект кеша инициализирован с емкостью {self.limit}")
+        self.main_logger.info(
+            "Объект кеша инициализирован с емкостью %d", self.limit,
+        )
+        if self.args.s:
+            self.stdout_logger.info(
+                "Объект кеша инициализирован с емкостью %d", self.limit,
+            )
 
     def get(self, key):
         if key not in self.elements:
-            self.main_logger.warning(f"Ключа {key} не существует")
-            self.stdout_logger.warning(f"Ключа {key} не существует")
+            self.main_logger.warning("Ключа %s не существует", key)
+            if self.args.s:
+                self.stdout_logger.warning("Ключа %s не существует", key)
             return None
         value = self.elements.pop(key)
-        self.main_logger.info(f"Взятие ключа {key} со значением {value}")
+        self.main_logger.info("Успешное взятие ключа %s", key)
         if self.args.s:
-            self.stdout_logger.info(f"Взятие ключа {key} со значением {value}")
+            self.stdout_logger.info("Успешное взятие ключа %s", key)
         self.elements[key] = value
-        self.stdout_logger.debug(f"Ключ {key} со значением {value} перемещен в конец")
+        if self.args.s:
+            self.stdout_logger.debug("Ключ %s перемещен в конец", key)
         return value
 
     def set(self, key, value):
         if key in self.elements:
-            self.main_logger.info(f"Ключ {key} скоро поменяет свое значение")
-            self.stdout_logger.info(f"Ключ {key} скоро поменяет свое значение")
+            self.main_logger.info("Ключ %s скоро поменяет свое значение", key)
+            if self.args.s:
+                self.stdout_logger.info("Ключ %s скоро поменяет свое значение", key)
             self.elements.pop(key, None)
         else:
-            self.main_logger.warning(f"Ключа {key} нет в кеше")
-            self.stdout_logger.warning(f"Ключа {key} нет в кеше")
+            self.main_logger.warning("Ключа %s нет в кеше", key)
+            if self.args.s:
+                self.stdout_logger.warning("Ключа %s нет в кеше", key)
             if len(self.elements) == self.limit:
                 for_delete = next(iter(self.elements))
-                self.main_logger.critical(f"Ключ {for_delete} удаляется из кеша")
-                self.stdout_logger.critical(f"Ключ {for_delete} удаляется из кеша")
+                self.main_logger.critical("Ключ %s удаляется из кеша", for_delete)
+                if self.args.s:
+                    self.stdout_logger.critical("Ключ %s удаляется из кеша", for_delete)
                 self.elements.pop(for_delete)
-        self.main_logger.debug(f"Ключ {key} добавляется в кеш со значением {value}")
-        self.stdout_logger.debug(f"Ключ {key} добавляется в кеш со значением {value}")
+        self.main_logger.debug("Ключ %s добавляется в кеш со значением %s", key, value)
+        if self.args.s:
+            self.stdout_logger.debug("Ключ %s добавляется в кеш со значением %s", key, value)
         self.elements[key] = value
 
 
 if __name__ == "__main__":
     cache = LRUCache(5)
+
+    cache.set("k1", "val1")
+    cache.set("k2", "val2")
+    cache.set("k3", "val3")
+
+    cache.get("k2")
+    cache.get("k3")
+    cache.get(4)
+
+    cache.set("k1", "val1_new")
+
+    cache.set(4, "new")

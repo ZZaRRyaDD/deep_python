@@ -34,3 +34,8 @@ conf = {
         },
     },
 }
+
+
+class CustomFilter(logging.Filter):
+    def filter(self, record):
+        return "кеш" not in record.msg
