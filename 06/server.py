@@ -30,23 +30,26 @@ def handle_url(url: str, most_common: int) -> dict:
 def worker_thread(
     count_words: int,
     in_queue: queue.Queue,
-    out_queue: queue.Queue,
     timeout: int,
     lock: threading.Lock,
 ) -> None:
     while True:
         try:
-            url = in_queue.get(timeout=timeout)
-            if not url:
+            connection = in_queue.get(timeout=timeout)
+            if not connection:
                 break
-            top_words = handle_url(
-                url.decode(DEFAULT_ENCODING),
-                count_words,
-            )
-            global COUNT_COMPUTED_URLS
-            COUNT_COMPUTED_URLS += 1
-            out_queue.put(str(json.dumps(top_words)).encode(DEFAULT_ENCODING))
-            print(COUNT_COMPUTED_URLS)
+            with connection:
+                url = connection.recv(8192)
+                top_words = handle_url(
+                    url.decode(DEFAULT_ENCODING),
+                    count_words,
+                )
+                with lock:
+                    global COUNT_COMPUTED_URLS
+                    COUNT_COMPUTED_URLS += 1
+                print(COUNT_COMPUTED_URLS)
+                result = str(json.dumps(top_words)).encode(DEFAULT_ENCODING)
+                connection.sendall(result)
         except Exception:
             pass
 
@@ -59,7 +62,6 @@ def master_thread(
     timeout: int = TIMEOUT,
 ) -> None:
     in_queue = queue.Queue()
-    out_queue = queue.Queue()
     lock = threading.Lock()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.settimeout(timeout)
@@ -70,7 +72,7 @@ def master_thread(
             threading.Thread(
                 target=worker_thread,
                 name=f"worker_thread_{i}",
-                args=(count_words, in_queue, out_queue, timeout, lock),
+                args=(count_words, in_queue, timeout, lock),
             )
             for i in range(workers)
         ]
@@ -79,11 +81,7 @@ def master_thread(
         while True:
             try:
                 conn, _ = server.accept()
-                with conn:
-                    data = conn.recv(8192)
-                    in_queue.put(data)
-                    result = out_queue.get()
-                    conn.sendall(result)
+                in_queue.put(conn)
             except TimeoutError:
                 break
         for thread in threads:
