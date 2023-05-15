@@ -1,10 +1,10 @@
 import json
 import queue
-import random
 import threading
 import socket
 
 from server import server_starter
+from get_port import get_unused_data
 
 
 def fake_client(tmp_queue: queue.Queue, host: str, port: int) -> None:
@@ -26,6 +26,7 @@ def fake_client(tmp_queue: queue.Queue, host: str, port: int) -> None:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
                 client.connect((host, port))
                 client.settimeout(timeout)
+                client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 client.sendall(url.encode())
                 data = client.recv(8192)
                 tmp_queue.put(json.loads(data.decode()))
@@ -36,7 +37,7 @@ def fake_client(tmp_queue: queue.Queue, host: str, port: int) -> None:
 
 
 def test_server_side(mocker) -> None:
-    host, port = "localhost", random.randint(1025, 65535)
+    host, port = get_unused_data()
     responses = [{str(i): i, str(i+1): i+1} for i in range(0, 20, 2)]
     mocker.patch("server.handle_url", side_effect=responses)
     server = threading.Thread(

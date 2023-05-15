@@ -1,8 +1,8 @@
 import argparse
+from io import TextIOWrapper
 import json
 import socket
 import threading
-import queue
 
 HOST = "localhost"
 PORT = 8080
@@ -11,14 +11,16 @@ DEFAULT_ENCODING = "utf-8"
 
 
 def client_sender(
-    main_queue: queue.Queue,
+    lock: threading.Lock,
     host: str,
     port: int,
+    file: TextIOWrapper,
     timeout: int = TIMEOUT,
 ) -> None:
     while True:
         try:
-            url = main_queue.get(timeout=timeout)
+            with lock:
+                url = file.readline()
             if not url:
                 break
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
@@ -27,10 +29,8 @@ def client_sender(
                 client.sendall(url.encode(DEFAULT_ENCODING))
                 data = client.recv(8192)
                 print(f"{url}: {json.loads(data.decode(DEFAULT_ENCODING))}\n")
-        except queue.Empty:
-            break
-        except TimeoutError:
-            break
+        except Exception:
+            pass
 
 
 def client_starter(
@@ -39,22 +39,20 @@ def client_starter(
     host: str = HOST,
     port: int = PORT,
 ) -> None:
-    main_queue = queue.Queue()
-    threads = [
-        threading.Thread(
-            target=client_sender,
-            name=f"thread_{i}",
-            args=(main_queue, host, port),
-        )
-        for i in range(threads)
-    ]
-    for thread in threads:
-        thread.start()
+    lock = threading.Lock()
     with open(path, "r", encoding="utf-8") as file:
-        while line := file.readline():
-            main_queue.put(line.replace("\n", ""))
-    for thread in threads:
-        thread.join()
+        threads = [
+            threading.Thread(
+                target=client_sender,
+                name=f"client_thread_{i}",
+                args=(lock, host, port, file),
+            )
+            for i in range(threads)
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
 
 def main() -> None:

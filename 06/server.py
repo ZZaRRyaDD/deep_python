@@ -32,6 +32,7 @@ def worker_thread(
     in_queue: queue.Queue,
     out_queue: queue.Queue,
     timeout: int,
+    lock: threading.Lock,
 ) -> None:
     while True:
         try:
@@ -46,8 +47,8 @@ def worker_thread(
             COUNT_COMPUTED_URLS += 1
             out_queue.put(str(json.dumps(top_words)).encode(DEFAULT_ENCODING))
             print(COUNT_COMPUTED_URLS)
-        except queue.Empty:
-            break
+        except Exception:
+            pass
 
 
 def master_thread(
@@ -59,6 +60,7 @@ def master_thread(
 ) -> None:
     in_queue = queue.Queue()
     out_queue = queue.Queue()
+    lock = threading.Lock()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.settimeout(timeout)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -68,7 +70,7 @@ def master_thread(
             threading.Thread(
                 target=worker_thread,
                 name=f"worker_thread_{i}",
-                args=(count_words, in_queue, out_queue, timeout),
+                args=(count_words, in_queue, out_queue, timeout, lock),
             )
             for i in range(workers)
         ]

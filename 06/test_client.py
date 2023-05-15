@@ -1,5 +1,4 @@
 import json
-import random
 import queue
 import os
 import threading
@@ -7,6 +6,7 @@ import socket
 from collections import Counter
 
 from client import client_starter
+from get_port import get_unused_data
 
 
 def fake_server(tmp_queue: queue.Queue, host: str, port: int) -> None:
@@ -30,7 +30,7 @@ def fake_server(tmp_queue: queue.Queue, host: str, port: int) -> None:
 
 def test_client_side(tmpdir) -> None:
     tmp_queue = queue.Queue()
-    host, port = "localhost", random.randint(1025, 65535)
+    host, port = get_unused_data()
     server = threading.Thread(
         target=fake_server,
         name="fake_server_thread",
@@ -66,5 +66,5 @@ def test_client_side(tmpdir) -> None:
     client.join()
     client_requests = []
     while not tmp_queue.empty():
-        client_requests.append(tmp_queue.get())
+        client_requests.append(tmp_queue.get().replace("\n", ""))
     assert sorted(client_requests) == sorted(base_urls)
