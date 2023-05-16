@@ -50,6 +50,10 @@ def worker_thread(
                 print(COUNT_COMPUTED_URLS)
                 result = str(json.dumps(top_words)).encode(DEFAULT_ENCODING)
                 connection.sendall(result)
+        except TimeoutError:
+            break
+        except queue.Empty:
+            break
         except Exception:
             pass
 

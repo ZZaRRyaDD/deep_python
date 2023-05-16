@@ -29,6 +29,8 @@ def client_sender(
                 client.sendall(url.encode(DEFAULT_ENCODING))
                 data = client.recv(8192)
                 print(f"{url}: {json.loads(data.decode(DEFAULT_ENCODING))}\n")
+        except TimeoutError:
+            break
         except Exception:
             pass
 

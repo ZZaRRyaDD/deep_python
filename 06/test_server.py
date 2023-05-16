@@ -26,7 +26,6 @@ def fake_client(tmp_queue: queue.Queue, host: str, port: int) -> None:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
                 client.connect((host, port))
                 client.settimeout(timeout)
-                client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 client.sendall(url.encode())
                 data = client.recv(8192)
                 tmp_queue.put(json.loads(data.decode()))
