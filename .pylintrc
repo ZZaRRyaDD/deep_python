@@ -12,7 +12,8 @@ disable:too-few-public-methods,
         use-implicit-booleaness-not-len,
         global-statement,
         duplicate-code,
-        broad-exception-caught
+        broad-exception-caught,
+        too-many-locals
 
 [FORMAT]
 max-line-length=100

@@ -1,8 +1,8 @@
 import argparse
-from io import TextIOWrapper
 import json
 import socket
 import threading
+from io import TextIOWrapper
 
 HOST = "localhost"
 PORT = 8080
@@ -20,7 +20,7 @@ def client_sender(
     while True:
         try:
             with lock:
-                url = file.readline()
+                url = file.readline().replace("\n", "")
             if not url:
                 break
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:

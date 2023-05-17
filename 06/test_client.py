@@ -5,11 +5,13 @@ import threading
 import socket
 from collections import Counter
 
+import pytest
+
 from client import client_starter
 from get_port import get_unused_data
 
 
-def fake_server(tmp_queue: queue.Queue, host: str, port: int) -> None:
+def fake_server(get_urls: queue.Queue, sended_data: queue.Queue, host: str, port: int) -> None:
     timeout = 10
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.settimeout(timeout)
@@ -21,50 +23,96 @@ def fake_server(tmp_queue: queue.Queue, host: str, port: int) -> None:
                 conn, _ = server.accept()
                 with conn:
                     data = conn.recv(8192)
-                    tmp_queue.put(data.decode())
-                    send_data = dict(Counter(data).most_common(2))
+                    get_data = data.decode().replace("\n", "")
+                    get_urls.put(get_data)
+                    send_data = dict(Counter(get_data).most_common(2))
+                    sended_data.put(send_data)
                     conn.sendall(str(json.dumps(send_data)).encode())
             except TimeoutError:
                 break
 
 
-def test_client_side(tmpdir) -> None:
-    tmp_queue = queue.Queue()
+@pytest.mark.parametrize(
+    ["count_threads", "urls"],
+    [
+        [
+            2,
+            [
+                "https://shikimori.me/",
+                "https://mail.yandex.ru/",
+                "https://stepik.org/catalog",
+                "https://dzen.ru/",
+                "https://ya.ru/",
+                "https://krasnoyarsk.hh.ru/",
+            ],
+        ],
+        [
+            7,
+            [
+                "https://shikimori.me/",
+                "https://mail.yandex.ru/",
+                "https://stepik.org/catalog",
+                "https://krasnoyarsk.hh.ru/",
+            ],
+        ],
+        [
+            10,
+            [
+                "https://shikimori.me/",
+                "https://mail.yandex.ru/",
+                "https://www.youtube.com/",
+                "https://stepik.org/catalog",
+                "https://github.com/PC-Nazarka",
+                "https://gitlab.com/PC-Nazarka",
+                "https://dzen.ru/",
+                "https://ya.ru/",
+                "https://krasnoyarsk.hh.ru/",
+                "https://docs.python.org/3/whatsnew/3.11.html",
+            ],
+        ],
+    ],
+)
+def test_client_side(
+    tmpdir,
+    capsys,
+    count_threads: int,
+    urls: list[str],
+) -> None:
+    get_urls = queue.Queue()
+    send_data = queue.Queue()
     host, port = get_unused_data()
     server = threading.Thread(
         target=fake_server,
         name="fake_server_thread",
-        args=(tmp_queue, host, port),
+        args=(get_urls, send_data, host, port),
     )
     server.start()
-    base_urls = [
-        "https://shikimori.me/",
-        "https://mail.yandex.ru/",
-        "https://www.youtube.com/",
-        "https://stepik.org/catalog",
-        "https://github.com/PC-Nazarka",
-        "https://gitlab.com/PC-Nazarka",
-        "https://dzen.ru/",
-        "https://ya.ru/",
-        "https://krasnoyarsk.hh.ru/",
-        "https://docs.python.org/3/whatsnew/3.11.html",
-    ]
     path = os.path.abspath("/start")
     filename = "file.txt"
     directory = tmpdir.mkdir(path)
     file_path = directory.join(filename)
     with open(file_path, "w", encoding="utf-8") as file:
-        file.writelines("\n".join(base_urls))
+        file.writelines("\n".join(urls))
     client = threading.Thread(
         target=client_starter,
         name="client_thread",
-        args=(5, file_path),
+        args=(count_threads, file_path),
         kwargs={"host": host, "port": port},
     )
     client.start()
     server.join()
     client.join()
+    captured = capsys.readouterr()
     client_requests = []
-    while not tmp_queue.empty():
-        client_requests.append(tmp_queue.get().replace("\n", ""))
-    assert sorted(client_requests) == sorted(base_urls)
+    while not get_urls.empty():
+        client_requests.append(get_urls.get())
+    assert sorted(client_requests) == sorted(urls)
+
+    sended_values = []
+    while not send_data.empty():
+        sended_values.append(send_data.get())
+    assert sorted([
+        line
+        for line in map(lambda x: x[x.find("{"):], captured.out.split("\n"))
+        if line
+    ]) == sorted(list(map(str, sended_values)))
