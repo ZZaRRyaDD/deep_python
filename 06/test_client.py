@@ -11,7 +11,12 @@ from client import client_starter
 from get_port import get_unused_data
 
 
-def fake_server(get_urls: queue.Queue, sended_data: queue.Queue, host: str, port: int) -> None:
+def fake_server(
+    get_urls: queue.Queue,
+    sended_data: queue.Queue,
+    host: str,
+    port: int,
+) -> None:
     timeout = 10
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.settimeout(timeout)

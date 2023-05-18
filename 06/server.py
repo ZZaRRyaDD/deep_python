@@ -4,6 +4,7 @@ import socket
 import threading
 import queue
 from collections import Counter
+from typing import Callable
 from urllib import request, error
 
 HOST = "localhost"
@@ -32,6 +33,7 @@ def worker_thread(
     in_queue: queue.Queue,
     timeout: int,
     lock: threading.Lock,
+    handler_func: Callable = handle_url,
 ) -> None:
     while True:
         try:
@@ -40,16 +42,16 @@ def worker_thread(
                 break
             with connection:
                 url = connection.recv(8192)
-                top_words = handle_url(
+                top_words = handler_func(
                     url.decode(DEFAULT_ENCODING),
                     count_words,
                 )
+                result = str(json.dumps(top_words)).encode(DEFAULT_ENCODING)
+                connection.sendall(result)
                 with lock:
                     global COUNT_COMPUTED_URLS
                     COUNT_COMPUTED_URLS += 1
                 print(COUNT_COMPUTED_URLS)
-                result = str(json.dumps(top_words)).encode(DEFAULT_ENCODING)
-                connection.sendall(result)
         except TimeoutError:
             break
         except queue.Empty:
@@ -64,6 +66,7 @@ def master_thread(
     host: str,
     port: int,
     timeout: int = TIMEOUT,
+    handler_func: Callable = handle_url,
 ) -> None:
     in_queue = queue.Queue()
     lock = threading.Lock()
@@ -77,6 +80,7 @@ def master_thread(
                 target=worker_thread,
                 name=f"worker_thread_{i}",
                 args=(count_words, in_queue, timeout, lock),
+                kwargs={"handler_func": handler_func},
             )
             for i in range(workers)
         ]
@@ -97,11 +101,13 @@ def server_starter(
     count_words: int,
     host: str = HOST,
     port: int = PORT,
+    handler_func: Callable = handle_url,
 ) -> None:
     master = threading.Thread(
         target=master_thread,
         name="master_thread",
         args=(workers, count_words, host, port),
+        kwargs={"handler_func": handler_func},
     )
     master.start()
     master.join()

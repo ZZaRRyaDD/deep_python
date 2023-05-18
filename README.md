@@ -15,14 +15,14 @@ pytest
 Получение отчета о покрытии тестами:
 
 ```bash
-coverage run -m pytest 
+coverage run -m pytest
 coverage report -m
-coverage html 
+coverage html
 ```
 
 Проверка линтерами:
 
 ```bash
 flake8
-pylint ./01/  # например
+pylint ./01/  # example
 ```
