@@ -32,19 +32,19 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
         printf("ERROR: Failed to create Dict Object\n");
         return NULL;
     }
-    const char openBracket = '{';
-    const char closeBracket = '}';
+    const char* emptyString = "";
+    const char* openBracket = "{";
+    const char* closeBracket = "}";
     const char doubleQuote = '"';
     const char colon = ':', emptyChar = ' ', commaChar = ',';
-    char* emptyString = "";
     const char oneChar = '1', twoChar = '2', threeChar = '3', fourChar = '4';
     const char fiveChar = '5', sixChar = '6', sevenChar = '7', eightChar = '8';
     const char nineChar = '9';
     if (length_unicode_json_str)
     {
         if(
-            PyUnicode_Count(json_str, PyUnicode_FromString(&openBracket), 0, 2) == 0 &&
-            PyUnicode_Count(json_str, PyUnicode_FromString(&closeBracket), length_unicode_json_str-2, length_unicode_json_str) == 0
+            PyUnicode_Count(json_str, PyUnicode_FromString(openBracket), 0, 2) == 0 &&
+            PyUnicode_Count(json_str, PyUnicode_FromString(closeBracket), length_unicode_json_str-2, length_unicode_json_str) == 0
         )
         {
             PyErr_Format(PyExc_TypeError, "Expected start bracket and end bracket in string");
@@ -56,7 +56,6 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
         PyErr_Format(PyExc_TypeError, "String is empty");
         return NULL;
     }
-    
     for (Py_ssize_t i = 0; i < length_unicode_json_str; i++)
     {
         PyObject* element = PyUnicode_Substring(json_str, i, i + 1);
@@ -75,50 +74,50 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
 
         if (key != NULL && value == NULL)
         {
-            // if (keyCreated == true)
-            // {
-            //     if (compare_symbols(element, doubleQuote))
-            //     {
-            //         value = PyList_New(0);
-            //         if (value == NULL)
-            //         {
-            //             printf("ERROR: Failed to create List Object\n");
-            //             return NULL;
-            //         }
-            //         isString = true;
-            //         continue;
-            //     }
-            //     else if
-            //     (
-            //         compare_symbols(element, oneChar) ||
-            //         compare_symbols(element, twoChar) ||
-            //         compare_symbols(element, threeChar) ||
-            //         compare_symbols(element, fourChar) ||
-            //         compare_symbols(element, fiveChar) ||
-            //         compare_symbols(element, sixChar) ||
-            //         compare_symbols(element, sevenChar) ||
-            //         compare_symbols(element, eightChar) ||
-            //         compare_symbols(element, nineChar)
-            //     )
-            //     {
-            //         value = PyList_New(0);
-            //         if (value == NULL)
-            //         {
-            //             printf("ERROR: Failed to create List Object\n");
-            //             return NULL;
-            //         }
-            //         isNumber = true;
-            //         continue;
-            //     }
-            //     else if
-            //     (
-            //         compare_symbols(element, colon) ||
-            //         compare_symbols(element, emptyChar)
-            //     ) 
-            //     {
-            //         continue;
-            //     }
-            // }
+            if (keyCreated == true)
+            {
+                if (compare_symbols(element, doubleQuote))
+                {
+                    value = PyList_New(0);
+                    if (value == NULL)
+                    {
+                        printf("ERROR: Failed to create List Object\n");
+                        return NULL;
+                    }
+                    isString = true;
+                    continue;
+                }
+                else if
+                (
+                    compare_symbols(element, oneChar) ||
+                    compare_symbols(element, twoChar) ||
+                    compare_symbols(element, threeChar) ||
+                    compare_symbols(element, fourChar) ||
+                    compare_symbols(element, fiveChar) ||
+                    compare_symbols(element, sixChar) ||
+                    compare_symbols(element, sevenChar) ||
+                    compare_symbols(element, eightChar) ||
+                    compare_symbols(element, nineChar)
+                )
+                {
+                    value = PyList_New(0);
+                    if (value == NULL)
+                    {
+                        printf("ERROR: Failed to create List Object\n");
+                        return NULL;
+                    }
+                    isNumber = true;
+                    continue;
+                }
+                else if
+                (
+                    compare_symbols(element, colon) ||
+                    compare_symbols(element, emptyChar)
+                ) 
+                {
+                    continue;
+                }
+            }
 
             if (lenKey > 0 && compare_symbols(element, doubleQuote))
             {   
@@ -143,52 +142,51 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
             }
         }
 
-        // if (key != NULL && value != NULL)
-        // {
-        //     if (
-        //         compare_symbols(element, doubleQuote) &&
-        //         isString
-        //     )
-        //     {
-        //         const char* string = PyUnicode_AsUTF8(
-        //             PyUnicode_Join(PyUnicode_FromString(emptyString), value)
-        //         );
-        //         if (!(value = Py_BuildValue("s", string))) {
-        //             printf("ERROR: Failed to build string value\n");
-        //             return NULL;
-        //         }
-        //     }
-        //     else if (
-        //         compare_symbols(element, commaChar) &&
-        //         isNumber
-        //         )
-        //     {
-        //         const char* string = PyUnicode_AsUTF8(
-        //             PyUnicode_Join(PyUnicode_FromString(emptyString), value)
-        //         );
-        //         if (!(value = Py_BuildValue("i", string))) {
-        //             printf("ERROR: Failed to build integer value\n");
-        //             return NULL;
-        //         }
-        //     }
-        //     else
-        //     {
-        //         lenValue++;
-        //         if (PyList_Append(value, element) == -1)
-        //         {
-        //             printf("ERROR: Failed to add item to List Object\n");
-        //             return NULL;
-        //         }
-        //     }
-        //     PyMem_Free(value);
-        //     lenValue = 0;
-        //     if (PyDict_SetItem(dict, key, value) < 0) {
-        //         printf("ERROR: Failed to set item\n");
-        //         return NULL;
-        //     }
-        //     PyMem_Free(key);
-        //     PyMem_Free(value);
-        // }
+        if (key != NULL && value != NULL)
+        {
+            if (
+                compare_symbols(element, doubleQuote) &&
+                isString
+            )
+            {
+                const char* string = PyUnicode_AsUTF8(
+                    PyUnicode_Join(PyUnicode_FromString(emptyString), value)
+                );
+                if (!(value = Py_BuildValue("s", string))) {
+                    printf("ERROR: Failed to build string value\n");
+                    return NULL;
+                }
+            }
+            else if (
+                compare_symbols(element, commaChar) &&
+                isNumber
+                )
+            {
+                const char* string = PyUnicode_AsUTF8(
+                    PyUnicode_Join(PyUnicode_FromString(emptyString), value)
+                );
+                if (!(value = Py_BuildValue("i", string))) {
+                    printf("ERROR: Failed to build integer value\n");
+                    return NULL;
+                }
+            }
+            else
+            {
+                lenValue++;
+                if (PyList_Append(value, element) == -1)
+                {
+                    printf("ERROR: Failed to add item to List Object\n");
+                    return NULL;
+                }
+            }
+            lenValue = 0;
+            if (PyDict_SetItem(dict, key, value) < 0) {
+                printf("ERROR: Failed to set item\n");
+                return NULL;
+            }
+            PyMem_Free(key);
+            PyMem_Free(value);
+        }
     }
     return dict;
 }
