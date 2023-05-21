@@ -30,7 +30,7 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
     Py_ssize_t lenKey = 0;
     Py_ssize_t lenValue = 0;
     if (!(dict = PyDict_New())) {
-        printf("ERROR: Failed to create Dict Object\n");
+        PyErr_Format(PyExc_MemoryError, "Failed to create Dict Object");
         return NULL;
     }
     const char* emptyString = "";
@@ -55,38 +55,27 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
             PyUnicode_Count(json_str, PyUnicode_FromString(closeBracket), length_unicode_json_str-2, length_unicode_json_str) == 0
         )
         {
-            PyErr_Format(PyExc_TypeError, "Expected start bracket and end bracket in string");
+            PyErr_Format(PyExc_ValueError, "Expected start bracket and end bracket in string");
             return NULL;
         }
     }
     else
     {
-        PyErr_Format(PyExc_TypeError, "String is empty");
+        PyErr_Format(PyExc_ValueError, "String is empty");
         return NULL;
     }
-
     for (Py_ssize_t i = 0; i < length_unicode_json_str; i++)
     {
         PyObject* element = PyUnicode_Substring(json_str, i, i + 1);
-        printf("symbol - %s\n", PyUnicode_AsUTF8(element));
-        if (key != NULL)
-        {
-            printf("key - %s %d\n", PyUnicode_AsUTF8(key), PyObject_Length(key));
-        }
-        if (value != NULL)
-        {
-            printf("value - %s %d\n", PyUnicode_AsUTF8(value), PyObject_Length(value));
-        }
 
         if (key == NULL && value == NULL && compare_symbols_ptr(element, doubleQuote))
         {
             lenKey++;
             key = PyList_New(0);
             if (key == NULL) {
-                printf("ERROR: Failed to create List Object\n");
+                PyErr_Format(PyExc_MemoryError, "Failed to create List Object");
                 return NULL;
             }
-            printf("создаем ключ\n");
             continue;
         }
 
@@ -99,7 +88,7 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
                     value = PyList_New(0);
                     if (value == NULL)
                     {
-                        printf("ERROR: Failed to create List Object\n");
+                        PyErr_Format(PyExc_MemoryError, "Failed to create List Object");
                         return NULL;
                     }
                     isString = true;
@@ -120,14 +109,14 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
                     value = PyList_New(0);
                     if (value == NULL)
                     {
-                        printf("ERROR: Failed to create List Object\n");
+                        PyErr_Format(PyExc_MemoryError, "Failed to create List Object");
                         return NULL;
                     }
                     isNumber = true;
                     lenValue++;
                     if (PyList_Append(value, element) == -1)
                     {
-                        printf("ERROR: Failed to add item to List Object\n");
+                        PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                         return NULL;
                     }
                 }
@@ -142,10 +131,9 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
                 ));
                 key = Py_BuildValue("s", string);
                 if (key == NULL) {
-                    printf("ERROR: Failed to build string value\n");
+                    PyErr_Format(PyExc_ValueError, "Failed to build string value");
                     return NULL;
                 }
-                printf("ключ собрали %s\n", string);
                 lenKey = 0;
                 keyCreated = true;
             }
@@ -154,7 +142,7 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
                 lenKey++;
                 if (PyList_Append(key, element) == -1)
                 {
-                    printf("ERROR: Failed to add item to List Object\n");
+                    PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                     return NULL;
                 }
             }
@@ -162,34 +150,25 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
 
         if (key != NULL && value != NULL)
         {
-            printf("тут");
-            printf("dq %d", compare_symbols_ptr(element, doubleQuote));
-            printf("comma %d", compare_symbols_ptr(element, commaChar));
             if (compare_symbols_ptr(element, doubleQuote) && isString)
             {
                 const char* string = PyUnicode_AsUTF8(
                     PyUnicode_Join(PyUnicode_FromString(emptyString), value)
                 );
                 if (!(value = Py_BuildValue("s", string))) {
-                    printf("ERROR: Failed to build string value\n");
+                    PyErr_Format(PyExc_ValueError, "Failed to build string value");
                     return NULL;
                 }
                 lenValue = 0;
                 if (PyDict_SetItem(dict, key, value) < 0) {
-                    printf("ERROR: Failed to set item\n");
+                    PyErr_Format(PyExc_ValueError, "Failed to set item");
                     return NULL;
                 }
                 isNumber = false;
                 isString = false;
+                keyCreated = false;
                 key = (PyObject*)NULL;
                 value = (PyObject*)NULL;
-                printf("собрали значение");
-                if (key == NULL) {
-                    printf("key none");
-                }
-                if (value == NULL) {
-                    printf("value none");
-                }
             }
             else if (
                 compare_symbols_ptr(element, commaChar) &&
@@ -200,39 +179,33 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
                 PyObject* tempLong = PyLong_FromUnicodeObject(string, 10);
                 value = Py_BuildValue("l", PyLong_AsLong(tempLong));
                 if (value == NULL) {
-                    printf("ERROR: Failed to build integer value\n");
+                    PyErr_Format(PyExc_ValueError, "Failed to build integer value");
                     return NULL;
                 }
                 lenValue = 0;
                 if (PyDict_SetItem(dict, key, value) < 0) {
-                    printf("ERROR: Failed to set item\n");
+                    PyErr_Format(PyExc_ValueError, "Failed to set item");
                     return NULL;
                 }
                 isNumber = false;
                 isString = false;
+                keyCreated = false;
                 key = (PyObject*)NULL;
                 value = (PyObject*)NULL;
-                printf("собрали значение");
-                if (key == NULL) {
-                    printf("key none");
-                }
-                if (value == NULL) {
-                    printf("value none");
-                }
             }
             else
             {
                 lenValue++;
                 if (PyList_Append(value, element) == -1)
                 {
-                    printf("ERROR: Failed to add item to List Object\n");
+                    PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                     return NULL;
                 }
                 continue;
             }
         }
     }
-    return dict;
+    return Py_BuildValue("O", dict);
 }
 
 PyObject* cjson_dumps(PyObject* self, PyObject* args)
@@ -244,13 +217,127 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
        PyErr_Format(PyExc_TypeError, "Expected dict object");
        return NULL;
     }
-    PyObject* listItems = PyDict_Items(&dict);
-    long listSize = PyList_Size(listItems);
-    for (long i = 0; i < listSize; i++) 
-    {
-        PyObject* element = PyList_GetItem(listItems, i);
+    const char* emptyString = "";
+    const char* spaceString = " ";
+    const char* openBracket = "{";
+    const char* closeBracket = "}";
+    const char* commaChar = ",";
+    const char* doubleQuote = "\"";
+    const char* colon = ":";
+    PyObject* tempItem = NULL;
+    PyObject* futureString = NULL;
+    if (!(futureString = PyList_New(0))) {
+        PyErr_Format(PyExc_MemoryError, "Failed to create List Object");
+        return NULL;
     }
-    return json_str;
+
+    tempItem = PyUnicode_FromString(openBracket);
+    if (PyList_Append(futureString, tempItem) == -1)
+    {
+        PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+        return NULL;
+    }
+
+    PyObject* keys = PyDict_Keys(dict);
+    Py_ssize_t length = PyObject_Length(keys);
+    PyObject* values = PyDict_Values(dict);
+    Py_ssize_t values_length = PyObject_Length(values);
+    for (Py_ssize_t i = 0; i < length; i++) 
+    {
+        tempItem = PyUnicode_FromString(doubleQuote);
+        if (PyList_Append(futureString, tempItem) == -1)
+        {
+            PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+            return NULL;
+        }
+        PyObject* key = PyList_GetItem(keys, i);
+        tempItem = PyUnicode_FromObject(key);
+        if (PyList_Append(futureString, tempItem) == -1)
+        {
+            PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+            return NULL;
+        }
+
+        tempItem = PyUnicode_FromString(doubleQuote);
+        if (PyList_Append(futureString, tempItem) == -1)
+        {
+            PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+            return NULL;
+        }
+
+        tempItem = PyUnicode_FromString(colon);
+        if (PyList_Append(futureString, tempItem) == -1)
+        {
+            PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+            return NULL;
+        }
+        tempItem = PyUnicode_FromString(spaceString);
+        if (PyList_Append(futureString, tempItem) == -1)
+        {
+            PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+            return NULL;
+        }
+
+        PyObject* value = PyDict_GetItem(dict, key);
+        tempItem = PyUnicode_FromObject(PyObject_Str(value));
+        if (!PyLong_Check(value))
+        {
+            tempItem = PyUnicode_FromString(doubleQuote);
+            if (PyList_Append(futureString, tempItem) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
+            tempItem = PyUnicode_FromObject(PyObject_Str(value));
+            if (PyList_Append(futureString, tempItem) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
+            tempItem = PyUnicode_FromString(doubleQuote);
+            if (PyList_Append(futureString, tempItem) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
+        }
+        else
+        {
+            tempItem = PyUnicode_FromObject(PyObject_Str(value));
+            if (PyList_Append(futureString, tempItem) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
+        }
+        
+        if (i != (length-1))
+        {
+            tempItem = PyUnicode_FromString(commaChar);
+            if (PyList_Append(futureString, tempItem) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
+            tempItem = PyUnicode_FromString(spaceString);
+            if (PyList_Append(futureString, tempItem) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
+        }
+    }
+    tempItem = PyUnicode_FromString(closeBracket);
+    if (PyList_Append(futureString, tempItem) == -1)
+    {
+        PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+        return NULL;
+    }
+    const char* string = PyUnicode_AsUTF8(PyUnicode_Join(
+        PyUnicode_FromString(emptyString),
+        futureString
+    ));
+    return Py_BuildValue("s", string);
 }
 
 static PyMethodDef methods[] = {
