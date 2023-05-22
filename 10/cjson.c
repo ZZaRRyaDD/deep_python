@@ -46,7 +46,7 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
     const char* fiveChar = "5";
     const char* sixChar = "6";
     const char* sevenChar = "7";
-    const char*eightChar = "8";
+    const char* eightChar = "8";
     const char* nineChar = "9";
     if (length_unicode_json_str)
     {
@@ -64,6 +64,7 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
         PyErr_Format(PyExc_ValueError, "String is empty");
         return NULL;
     }
+
     for (Py_ssize_t i = 0; i < length_unicode_json_str; i++)
     {
         PyObject* element = PyUnicode_Substring(json_str, i, i + 1);

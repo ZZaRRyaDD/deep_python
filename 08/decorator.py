@@ -2,20 +2,19 @@ import cProfile
 import pstats
 
 
-FUNC_EXECUTE = """
-{func_name}:
-\tncalls {ncalls}
-\ttottime {tottime}
-\tpercall_tottime {percall_tottime}
-\tcumtime {cumtime}
-\tpercall_cumtime {percall_cumtime}
-\tfile_name {file_name}
+FUNC_EXECUTE = """\tncalls: {ncalls}
+\ttottime: {tottime}
+\tpercall_tottime: {percall_tottime}
+\tcumtime: {cumtime}
+\tpercall_cumtime: {percall_cumtime}
+\tfile_name: {file_name}
 """
 
 
 class ProfiledFunction:
     def __init__(self, func):
         self.func = func
+        self.func_name = func.__name__
         self.runs = []
 
     def __call__(self, *args, **kwargs):
@@ -28,25 +27,26 @@ class ProfiledFunction:
         return result
 
     def print_stat(self) -> None:
-        print(f"{self.func.__name__} runs")
-        print("*" * 20)
-        for number, run in enumerate(self.runs, 1):
-            print(f"Run #{number}")
-            print(f"Total time: {run.total_tt}", sep="")
-            for method, profile in run.func_profiles.items():
-                print(
-                    FUNC_EXECUTE.format(
-                        func_name=method,
-                        ncalls=profile.ncalls,
-                        tottime=profile.tottime,
-                        percall_tottime=profile.percall_tottime,
-                        cumtime=profile.cumtime,
-                        percall_cumtime=profile.percall_cumtime,
-                        file_name=profile.file_name,
-                    ),
-                    sep="",
-                )
-        print("*" * 20 + "\n\n")
+        print(f"Func {self.func.__name__}")
+        total_tt = sum([run.total_tt for run in self.runs])
+        print(f"Total time: {total_tt}")
+        func_profiles = [run.func_profiles[self.func_name] for run in self.runs]
+        tottime = sum([run.tottime for run in func_profiles])
+        percall_tottime = sum([run.percall_tottime for run in func_profiles])
+        cumtime = sum([run.cumtime for run in func_profiles])
+        percall_cumtime = sum([run.percall_cumtime for run in func_profiles])
+        file_name = list(set([run.file_name for run in func_profiles]))[0]
+        print(
+            FUNC_EXECUTE.format(
+                func_name=self.func_name,
+                ncalls=len(self.runs),
+                tottime=tottime,
+                percall_tottime=percall_tottime,
+                cumtime=cumtime,
+                percall_cumtime=percall_cumtime,
+                file_name=file_name,
+            ) + "\n",
+        )
 
 
 def profile_deco(func) -> ProfiledFunction:
