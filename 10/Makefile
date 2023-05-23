@@ -18,3 +18,7 @@ setup_module:
 test:
 	source venv/bin/activate; \
 	pytest --disable-warnings
+
+speed_check:
+	source venv/bin/activate; \
+	python compare_speed.py

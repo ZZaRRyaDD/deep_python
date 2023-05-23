@@ -38,7 +38,6 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
     const char* closeBracket = "}";
     const char* commaChar = ",";
     const char* doubleQuote = "\"";
-    const char* colon = ":";
     const char* oneChar = "1";
     const char* twoChar = "2";
     const char* threeChar = "3";
@@ -212,7 +211,6 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
 PyObject* cjson_dumps(PyObject* self, PyObject* args)
 {
     PyObject* dict;
-    PyObject* json_str;
     if (!PyArg_ParseTuple(args, "O", &dict))
     {
        PyErr_Format(PyExc_TypeError, "Expected dict object");
@@ -242,7 +240,6 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
     PyObject* keys = PyDict_Keys(dict);
     Py_ssize_t length = PyObject_Length(keys);
     PyObject* values = PyDict_Values(dict);
-    Py_ssize_t values_length = PyObject_Length(values);
     for (Py_ssize_t i = 0; i < length; i++) 
     {
         tempItem = PyUnicode_FromString(doubleQuote);

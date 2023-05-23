@@ -4,6 +4,7 @@ import json
 import ujson
 
 import cjson
+from json_factory import json_factory
 
 
 def cjson_operations(json_strs):
@@ -45,8 +46,8 @@ def json_operations(json_strs):
     return time_loads, time_dumps
 
 
-def test_speed_cjson():
-    json_strs = ""
+def compare_speed_cjson():
+    json_strs = json_factory()
     modules = {
         "cjson": cjson_operations,
         "ujson": ujson_operations,
@@ -54,4 +55,12 @@ def test_speed_cjson():
     }
     for module, func in modules.items():
         time_loads, time_dumps = func(json_strs)
-        print(f"Время работы {module}: loads - {time_loads}; dumps - {time_dumps}")
+        print(
+            f"Время работы {module}: "
+            f"loads - {time_loads}; "
+            f"dumps - {time_dumps}"
+        )
+
+
+if __name__ == "__main__":
+    compare_speed_cjson()
