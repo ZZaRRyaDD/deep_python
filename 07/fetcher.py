@@ -21,14 +21,17 @@ async def handle_url(
 async def worker_task(queue: asyncio.Queue) -> None:
     async with aiohttp.ClientSession() as session:
         while True:
-            url = await queue.get()
-            data = await handle_url(url, session)
-            queue.task_done()
-            print(f"{url}: {data}\n")
+            try:
+                url = await queue.get()
+                data = await handle_url(url, session)
+                queue.task_done()
+                print(f"{url}: {data}\n")
+            except Exception:
+                queue.task_done()
 
 
 async def server_starter(count_workers: int, path: str) -> None:
-    main_queue = asyncio.Queue()
+    main_queue = asyncio.Queue(maxsize=count_workers)
     workers = [
         asyncio.create_task(worker_task(main_queue))
         for _ in range(count_workers)
