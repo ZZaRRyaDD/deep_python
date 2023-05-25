@@ -24,9 +24,8 @@ async def worker_task(queue: asyncio.Queue) -> None:
             try:
                 url = await queue.get()
                 data = await handle_url(url, session)
-                queue.task_done()
                 print(f"{url}: {data}\n")
-            except Exception:
+            finally:
                 queue.task_done()
 
 
