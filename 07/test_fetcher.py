@@ -1,9 +1,16 @@
 import asyncio
 import os
+from collections import Counter
 
+import aiohttp
 import pytest
+from aioresponses import aioresponses
 
-from fetcher import server_starter, worker_task
+from fetcher import (
+    server_starter,
+    worker_task,
+    handle_url,
+)
 
 
 @pytest.mark.asyncio
@@ -112,3 +119,18 @@ async def test_worker(mocker, tmpdir, capsys):
         ]
     )
     assert captured.out.replace("\n", "") == result
+
+
+@pytest.mark.asyncio
+async def test_handle_url():
+    response = "Some return message, from internet"
+    url = "http://example.com"
+    most_common = 5
+    with aioresponses() as mocked:
+        mocked.get(url, status=200, body=response)
+        session = aiohttp.ClientSession()
+        result = await handle_url(url, session, most_common)
+        response = response.split()
+        final_result = dict(Counter(response).most_common(most_common))
+        await session.close()
+        assert final_result == result

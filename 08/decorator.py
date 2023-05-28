@@ -28,14 +28,14 @@ class ProfiledFunction:
 
     def print_stat(self) -> None:
         print(f"Func {self.func.__name__}")
-        total_tt = sum([run.total_tt for run in self.runs])
+        total_tt = sum(run.total_tt for run in self.runs)
         print(f"Total time: {total_tt}")
         func_profiles = [run.func_profiles[self.func_name] for run in self.runs]
-        tottime = sum([run.tottime for run in func_profiles])
-        percall_tottime = sum([run.percall_tottime for run in func_profiles])
-        cumtime = sum([run.cumtime for run in func_profiles])
-        percall_cumtime = sum([run.percall_cumtime for run in func_profiles])
-        file_name = list(set([run.file_name for run in func_profiles]))[0]
+        tottime = sum(run.tottime for run in func_profiles)
+        percall_tottime = sum(run.percall_tottime for run in func_profiles)
+        cumtime = sum(run.cumtime for run in func_profiles)
+        percall_cumtime = sum(run.percall_cumtime for run in func_profiles)
+        file_name = list(set(run.file_name for run in func_profiles))[0]
         print(
             FUNC_EXECUTE.format(
                 func_name=self.func_name,
