@@ -2,11 +2,13 @@ import json
 import queue
 import threading
 import socket
+from test.support import socket_helper
 
 import pytest
 
 from server import server_starter
-from get_port import get_unused_data
+
+HOST = "localhost"
 
 
 def fake_client(
@@ -83,7 +85,7 @@ def test_server_side(
     count_words: int,
     urls: list[str],
 ) -> None:
-    host, port = get_unused_data()
+    port = socket_helper.find_unused_port()
     tmp_queue = queue.Queue()
     responses = [{str(i): i, str(i+1): i+1} for i in range(len(urls))]
     func = mocker.Mock(side_effect=responses)
@@ -91,12 +93,12 @@ def test_server_side(
         target=server_starter,
         name="server_thread",
         args=(workers, count_words),
-        kwargs={"host": host, "port": port, "handler_func": func},
+        kwargs={"host": HOST, "port": port, "handler_func": func},
     )
     client = threading.Thread(
         target=fake_client,
         name="fake_client_thread",
-        args=(tmp_queue, host, port, urls),
+        args=(tmp_queue, HOST, port, urls),
     )
     server.start()
     client.start()

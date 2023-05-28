@@ -4,11 +4,13 @@ import os
 import threading
 import socket
 from collections import Counter
+from test.support import socket_helper
 
 import pytest
 
 from client import client_starter
-from get_port import get_unused_data
+
+HOST = "localhost"
 
 
 def fake_server(
@@ -85,11 +87,11 @@ def test_client_side(
 ) -> None:
     get_urls = queue.Queue()
     send_data = queue.Queue()
-    host, port = get_unused_data()
+    port = socket_helper.find_unused_port()
     server = threading.Thread(
         target=fake_server,
         name="fake_server_thread",
-        args=(get_urls, send_data, host, port),
+        args=(get_urls, send_data, HOST, port),
     )
     server.start()
     path = os.path.abspath("/start")
@@ -102,7 +104,7 @@ def test_client_side(
         target=client_starter,
         name="client_thread",
         args=(count_threads, file_path),
-        kwargs={"host": host, "port": port},
+        kwargs={"host": HOST, "port": port},
     )
     client.start()
     server.join()
