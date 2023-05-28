@@ -7,14 +7,13 @@ FUNC_EXECUTE = """\tncalls: {ncalls}
 \tpercall_tottime: {percall_tottime}
 \tcumtime: {cumtime}
 \tpercall_cumtime: {percall_cumtime}
-\tfile_name: {file_name}
+\tfile_name:lineno(function): {file_name}
 """
 
 
 class ProfiledFunction:
     def __init__(self, func):
         self.func = func
-        self.func_name = func.__name__
         self.runs = []
 
     def __call__(self, *args, **kwargs):
@@ -28,25 +27,42 @@ class ProfiledFunction:
 
     def print_stat(self) -> None:
         print(f"Func {self.func.__name__}")
+        func_info = {
+            "ncalls": 0,
+            "tottime": 0.0,
+            "percall_tottime": 0.0,
+            "cumtime": 0.0,
+            "percall_cumtime": 0.0,
+        }
+        functions = {}
         total_tt = sum(run.total_tt for run in self.runs)
         print(f"Total time: {total_tt}")
-        func_profiles = [run.func_profiles[self.func_name] for run in self.runs]
-        tottime = sum(run.tottime for run in func_profiles)
-        percall_tottime = sum(run.percall_tottime for run in func_profiles)
-        cumtime = sum(run.cumtime for run in func_profiles)
-        percall_cumtime = sum(run.percall_cumtime for run in func_profiles)
-        file_name = list(set(run.file_name for run in func_profiles))[0]
-        print(
-            FUNC_EXECUTE.format(
-                func_name=self.func_name,
-                ncalls=len(self.runs),
-                tottime=tottime,
-                percall_tottime=percall_tottime,
-                cumtime=cumtime,
-                percall_cumtime=percall_cumtime,
-                file_name=file_name,
-            ) + "\n",
-        )
+        for run in self.runs:
+            for function_name in run.func_profiles:
+                func_run = run.func_profiles[function_name]
+                if func_run.file_name == "~" and func_run.line_number == 0:
+                    key = "{" + function_name + "}"
+                else:
+                    key = f"{func_run.file_name}:{func_run.line_number}({function_name})"
+                if key not in functions:
+                    functions[key] = func_info.copy()
+                functions[key]["ncalls"] += 1
+                functions[key]["tottime"] += func_run.tottime
+                functions[key]["percall_tottime"] += func_run.percall_tottime
+                functions[key]["cumtime"] += func_run.cumtime
+                functions[key]["percall_cumtime"] += func_run.percall_cumtime
+
+        for name, info in functions.items():
+            print(
+                FUNC_EXECUTE.format(
+                    ncalls=info["ncalls"],
+                    tottime=info["tottime"],
+                    percall_tottime=info["percall_tottime"],
+                    cumtime=info["cumtime"],
+                    percall_cumtime=info["percall_cumtime"],
+                    file_name=name,
+                ) + "\n",
+            )
 
 
 def profile_deco(func) -> ProfiledFunction:

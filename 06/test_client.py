@@ -24,7 +24,7 @@ def fake_server(
         server.settimeout(timeout)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind((host, port))
-        server.listen(1)
+        server.listen(5)
         while True:
             try:
                 conn, _ = server.accept()
