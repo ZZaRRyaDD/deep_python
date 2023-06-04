@@ -18,8 +18,12 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
     PyObject* json_str;
     if (!PyArg_ParseTuple(args, "U", &json_str))
     {
-       PyErr_Format(PyExc_TypeError, "Expected unicode string");
+       PyErr_Format(PyExc_TypeError, "Failed to parse arguments\n");
        return NULL;
+    }
+    if (!PyUnicode_Check(json_str)) {
+        PyErr_Format(PyExc_TypeError, "Expected unicode string object");
+        return NULL;
     }
     Py_ssize_t length_unicode_json_str = PyUnicode_GetLength(json_str);
     bool isNumber = false, isString = false;
@@ -50,7 +54,7 @@ PyObject* cjson_loads(PyObject* self, PyObject* args)
     if (length_unicode_json_str)
     {
         if(
-            PyUnicode_Count(json_str, PyUnicode_FromString(openBracket), 0, 2) == 0 &&
+            PyUnicode_Count(json_str, PyUnicode_FromString(openBracket), 0, 2) == 0 ||
             PyUnicode_Count(json_str, PyUnicode_FromString(closeBracket), length_unicode_json_str-2, length_unicode_json_str) == 0
         )
         {
@@ -213,16 +217,27 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
     PyObject* dict;
     if (!PyArg_ParseTuple(args, "O", &dict))
     {
-       PyErr_Format(PyExc_TypeError, "Expected dict object");
+       PyErr_Format(PyExc_TypeError, "Failed to parse arguments\n");
        return NULL;
     }
+    if (!PyDict_Check(dict)) {
+        PyErr_Format(PyExc_TypeError, "Expected dict object");
+        return NULL;
+    }
     const char* emptyString = "";
+    PyObject* pyEmptyString = PyUnicode_FromString(emptyString);
     const char* spaceString = " ";
+    PyObject* pySpaceString = PyUnicode_FromString(spaceString);
     const char* openBracket = "{";
+    PyObject* pyOpenBracket = PyUnicode_FromString(openBracket);
     const char* closeBracket = "}";
+    PyObject* pyCloseBracket = PyUnicode_FromString(closeBracket);
     const char* commaChar = ",";
+    PyObject* pyCommaChar = PyUnicode_FromString(commaChar);
     const char* doubleQuote = "\"";
+    PyObject* pyDoubleQuote = PyUnicode_FromString(doubleQuote);
     const char* colon = ":";
+    PyObject* pyColon = PyUnicode_FromString(colon);
     PyObject* tempItem = NULL;
     PyObject* futureString = NULL;
     if (!(futureString = PyList_New(0))) {
@@ -230,8 +245,7 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    tempItem = PyUnicode_FromString(openBracket);
-    if (PyList_Append(futureString, tempItem) == -1)
+    if (PyList_Append(futureString, pyOpenBracket) == -1)
     {
         PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
         return NULL;
@@ -239,16 +253,18 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
 
     PyObject* keys = PyDict_Keys(dict);
     Py_ssize_t length = PyObject_Length(keys);
-    PyObject* values = PyDict_Values(dict);
     for (Py_ssize_t i = 0; i < length; i++) 
     {
-        tempItem = PyUnicode_FromString(doubleQuote);
-        if (PyList_Append(futureString, tempItem) == -1)
+        if (PyList_Append(futureString, pyDoubleQuote) == -1)
         {
             PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
             return NULL;
         }
         PyObject* key = PyList_GetItem(keys, i);
+        if (!PyUnicode_Check(key)) {
+            PyErr_Format(PyExc_TypeError, "Expected unicode string object in key");
+            return NULL;
+        }
         tempItem = PyUnicode_FromObject(key);
         if (PyList_Append(futureString, tempItem) == -1)
         {
@@ -256,21 +272,18 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
             return NULL;
         }
 
-        tempItem = PyUnicode_FromString(doubleQuote);
-        if (PyList_Append(futureString, tempItem) == -1)
+        if (PyList_Append(futureString, pyDoubleQuote) == -1)
         {
             PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
             return NULL;
         }
 
-        tempItem = PyUnicode_FromString(colon);
-        if (PyList_Append(futureString, tempItem) == -1)
+        if (PyList_Append(futureString, pyColon) == -1)
         {
             PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
             return NULL;
         }
-        tempItem = PyUnicode_FromString(spaceString);
-        if (PyList_Append(futureString, tempItem) == -1)
+        if (PyList_Append(futureString, pySpaceString) == -1)
         {
             PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
             return NULL;
@@ -280,20 +293,17 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
         tempItem = PyUnicode_FromObject(PyObject_Str(value));
         if (!PyLong_Check(value))
         {
-            tempItem = PyUnicode_FromString(doubleQuote);
+            if (PyList_Append(futureString, pyDoubleQuote) == -1)
+            {
+                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
+                return NULL;
+            }
             if (PyList_Append(futureString, tempItem) == -1)
             {
                 PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                 return NULL;
             }
-            tempItem = PyUnicode_FromObject(PyObject_Str(value));
-            if (PyList_Append(futureString, tempItem) == -1)
-            {
-                PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
-                return NULL;
-            }
-            tempItem = PyUnicode_FromString(doubleQuote);
-            if (PyList_Append(futureString, tempItem) == -1)
+            if (PyList_Append(futureString, pyDoubleQuote) == -1)
             {
                 PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                 return NULL;
@@ -301,7 +311,6 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
         }
         else
         {
-            tempItem = PyUnicode_FromObject(PyObject_Str(value));
             if (PyList_Append(futureString, tempItem) == -1)
             {
                 PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
@@ -311,28 +320,25 @@ PyObject* cjson_dumps(PyObject* self, PyObject* args)
         
         if (i != (length-1))
         {
-            tempItem = PyUnicode_FromString(commaChar);
-            if (PyList_Append(futureString, tempItem) == -1)
+            if (PyList_Append(futureString, pyCommaChar) == -1)
             {
                 PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                 return NULL;
             }
-            tempItem = PyUnicode_FromString(spaceString);
-            if (PyList_Append(futureString, tempItem) == -1)
+            if (PyList_Append(futureString, pySpaceString) == -1)
             {
                 PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
                 return NULL;
             }
         }
     }
-    tempItem = PyUnicode_FromString(closeBracket);
-    if (PyList_Append(futureString, tempItem) == -1)
+    if (PyList_Append(futureString, pyCloseBracket) == -1)
     {
         PyErr_Format(PyExc_MemoryError, "Failed to add item to List Object");
         return NULL;
     }
     const char* string = PyUnicode_AsUTF8(PyUnicode_Join(
-        PyUnicode_FromString(emptyString),
+        pyEmptyString,
         futureString
     ));
     return Py_BuildValue("s", string);

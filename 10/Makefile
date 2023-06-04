@@ -22,3 +22,6 @@ test:
 speed_check:
 	source venv/bin/activate; \
 	python compare_speed.py
+
+clean:
+	rm -fr *.egg-info venv dist build __pycache__ .pytest_cache

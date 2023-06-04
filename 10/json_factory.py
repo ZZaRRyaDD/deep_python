@@ -3,7 +3,7 @@ from random import randint
 
 from faker import Faker
 
-N = 1000
+N = 1000000
 
 
 def json_factory(count_keys: int = N) -> list[str]:
